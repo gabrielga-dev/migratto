@@ -10,10 +10,12 @@ import (
 func main() {
 	fmt.Println("Welcome to Migratto!")
 	migration_service.Migrate(DTO.ConfigDTO{
+		DatabaseDriver:   "postgres",
 		DatabaseHost:     "localhost",
+		DatabasePort:     5432,
 		DatabaseName:     "migratto",
-		DatabaseUsername: "admin",
-		DatabasePassword: "admin123",
+		DatabaseUsername: "user",
+		DatabasePassword: "pass",
 		Sslmode:          "disable",
 		MigrationsDir:    "./migrations",
 		Log:              true,
