@@ -18,6 +18,12 @@ func Migrate(config DTO.ConfigDTO) error {
 		fmt.Println("Running migrations...")
 	}
 
+	err := validateDriver(config.DatabaseDriver)
+	if err != nil {
+		fmt.Println("Error validating database driver:", err)
+		return err
+	}
+
 	files, err := file_service.GetFilesFromDir(config.MigrationsDir)
 	if err != nil {
 		fmt.Println("Error getting migration files:", err)
@@ -30,6 +36,16 @@ func Migrate(config DTO.ConfigDTO) error {
 	}
 	fmt.Println("Migrations completed successfully.")
 	return nil
+}
+
+func validateDriver(driver string) error {
+	supportedDrivers := []string{"postgres", "postgresql", "mysql", "mariadb"}
+	for _, d := range supportedDrivers {
+		if driver == d {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s is an unsupported database driver", driver)
 }
 
 func migrateFiles(files []os.DirEntry, config DTO.ConfigDTO) error {
