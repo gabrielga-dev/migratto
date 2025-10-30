@@ -13,7 +13,23 @@ func GetFilesFromDir(MigrationsDir string) ([]os.DirEntry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening migrations directory: %v", err)
 	}
-	return files, nil
+
+	sqlFiles := getOnlySqlFiles(files)
+
+	if len(files) != len(sqlFiles) {
+		return nil, fmt.Errorf("the migrations dir must have only .sql files")
+	}
+	return sqlFiles, nil
+}
+
+func getOnlySqlFiles(files []os.DirEntry) []os.DirEntry {
+	sqlFiles := []os.DirEntry{}
+	for _, file := range files {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".sql") {
+			sqlFiles = append(sqlFiles, file)
+		}
+	}
+	return sqlFiles
 }
 
 func GetChecksum(filePath string) (string, error) {
