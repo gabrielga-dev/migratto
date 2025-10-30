@@ -8,6 +8,8 @@ import (
 
 	"github.org/gabrielga-dev/migratto/db"
 	DTO "github.org/gabrielga-dev/migratto/dto"
+	migration_model "github.org/gabrielga-dev/migratto/model/migration"
+	migration_collection_model "github.org/gabrielga-dev/migratto/model/migration/collection"
 	file_service "github.org/gabrielga-dev/migratto/service/file"
 )
 
@@ -47,13 +49,11 @@ func migrateFiles(files []os.DirEntry, config DTO.ConfigDTO) error {
 		return err
 	}
 
-	for index, file := range files {
-		if len(appliedMigrations) == 0 || index >= len(appliedMigrations) {
-			err := migrateFile(file, databaseConection, config)
-			if err != nil {
-				fmt.Println("Error migrating file:", file.Name())
-				return err
-			}
+	for _, file := range files {
+		err := migrateFile(file, databaseConection, config, appliedMigrations)
+		if err != nil {
+			fmt.Println("Error migrating file:", file.Name())
+			return err
 		}
 	}
 	databaseConection.Close()
@@ -65,6 +65,8 @@ func prepareDatabase(databaseConection *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS migratto_migration_history (
 		id SERIAL PRIMARY KEY,
 		filename VARCHAR(255) NOT NULL,
+		checksum VARCHAR NOT NULL,
+		tag VARCHAR NOT NULL,
 		applied_at TIMESTAMP NOT NULL DEFAULT NOW()
 	);
 	`
@@ -75,45 +77,83 @@ func prepareDatabase(databaseConection *sql.DB) error {
 	return nil
 }
 
-func getAppliedMigrations(databaseConection *sql.DB) ([]string, error) {
-	rows, err := databaseConection.Query("SELECT filename FROM migratto_migration_history")
+func getAppliedMigrations(databaseConection *sql.DB) (migration_collection_model.MigrationModelCollection, error) {
+	rows, err := databaseConection.Query("SELECT filename, checksum, tag FROM migratto_migration_history")
 	if err != nil {
-		return nil, fmt.Errorf("error querying applied migrations: %v", err)
+		return migration_collection_model.MigrationModelCollection{}, fmt.Errorf("error querying applied migrations: %v", err)
 	}
 	defer rows.Close()
 
-	var appliedMigrations []string
+	var appliedMigrations []migration_model.MigrationModel
 	for rows.Next() {
-		var filename string
-		if err := rows.Scan(&filename); err != nil {
-			return nil, fmt.Errorf("error scanning applied migration: %v", err)
+		var filename, checksum, tag string
+
+		if err := rows.Scan(&filename, &checksum, &tag); err != nil {
+			return migration_collection_model.MigrationModelCollection{}, fmt.Errorf("error scanning applied migration: %v", err)
 		}
-		appliedMigrations = append(appliedMigrations, filename)
+		migrationModel := migration_model.MigrationModel{
+			Filename: filename,
+			Checksum: checksum,
+			Tag:      tag,
+		}
+
+		appliedMigrations = append(appliedMigrations, migrationModel)
 	}
-	return appliedMigrations, nil
+	return migration_collection_model.MigrationModelCollection{Migrations: appliedMigrations}, nil
 }
 
-func migrateFile(file os.DirEntry, databaseConection *sql.DB, config DTO.ConfigDTO) error {
+func migrateFile(
+	file os.DirEntry,
+	databaseConection *sql.DB,
+	config DTO.ConfigDTO,
+	appliedMigrations migration_collection_model.MigrationModelCollection,
+) error {
+
 	if config.Log {
 		fmt.Println("Migrating file:", file.Name())
 	}
+
+	fileTag := file_service.GetFileTag(file.Name())
+	appliedMigration, err := appliedMigrations.GetMigrationByTag(fileTag)
+	if err == nil {
+		// Migration with this tag has been applied
+		if !appliedMigration.IsEqual(file, config.MigrationsDir) {
+			return fmt.Errorf("migration conflict for tag %s in file %s", fileTag, file.Name())
+		} else {
+			return nil
+		}
+	}
+
 	content, err := ioutil.ReadFile(config.MigrationsDir + "/" + file.Name())
 	if err != nil {
 		return fmt.Errorf("error reading migration file %s: %v", file.Name(), err)
 	}
+
 	_, err = databaseConection.Exec(string(content))
 	if err != nil {
 		return fmt.Errorf("error executing migration file %s: %v", file.Name(), err)
 	}
-	err = createMigrationHistory(file, databaseConection)
+
+	err = createMigrationHistory(file, databaseConection, config)
 	if err != nil {
 		return fmt.Errorf("error creating migration history for file %s: %v", file.Name(), err)
 	}
+
 	return nil
 }
 
-func createMigrationHistory(file os.DirEntry, databaseConection *sql.DB) error {
-	_, err := databaseConection.Exec("INSERT INTO migratto_migration_history (filename) VALUES ($1)", file.Name())
+func createMigrationHistory(file os.DirEntry, databaseConection *sql.DB, config DTO.ConfigDTO) error {
+	checksum, err := file_service.GetChecksum(config.MigrationsDir + "/" + file.Name())
+	if err != nil {
+		return fmt.Errorf("error getting checksum for file %s: %v", file.Name(), err)
+	}
+
+	tag := file_service.GetFileTag(file.Name())
+
+	_, err = databaseConection.Exec(
+		"INSERT INTO migratto_migration_history (filename, checksum, tag) VALUES ($1, $2, $3)",
+		file.Name(), checksum, tag,
+	)
 	if err != nil {
 		return fmt.Errorf("error recording migration history for file %s: %v", file.Name(), err)
 	}

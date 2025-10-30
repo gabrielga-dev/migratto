@@ -1,8 +1,11 @@
 package file_service
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 )
 
 func GetFilesFromDir(MigrationsDir string) ([]os.DirEntry, error) {
@@ -11,4 +14,23 @@ func GetFilesFromDir(MigrationsDir string) ([]os.DirEntry, error) {
 		return nil, fmt.Errorf("error opening migrations directory: %v", err)
 	}
 	return files, nil
+}
+
+func GetChecksum(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", fmt.Errorf("failed to copy file content to hasher: %w", err)
+	}
+
+	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
+}
+
+func GetFileTag(fileName string) string {
+	return strings.Split(fileName, "_")[0]
 }
