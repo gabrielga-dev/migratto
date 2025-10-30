@@ -39,7 +39,7 @@ func migrateFiles(files []os.DirEntry, config DTO.ConfigDTO) error {
 		return err
 	}
 
-	err = prepareDatabase(databaseConection)
+	err = prepareDatabase(databaseConection, config)
 	if err != nil {
 		return err
 	}
@@ -60,21 +60,40 @@ func migrateFiles(files []os.DirEntry, config DTO.ConfigDTO) error {
 	return nil
 }
 
-func prepareDatabase(databaseConection *sql.DB) error {
-	migrattoTableCreationQuery := `
-	CREATE TABLE IF NOT EXISTS migratto_migration_history (
-		id SERIAL PRIMARY KEY,
-		filename VARCHAR(255) NOT NULL,
-		checksum VARCHAR NOT NULL,
-		tag VARCHAR NOT NULL,
-		applied_at TIMESTAMP NOT NULL DEFAULT NOW()
-	);
-	`
+func prepareDatabase(databaseConection *sql.DB, config DTO.ConfigDTO) error {
+	migrattoTableCreationQuery := getMigrattoTableCreationQuery(config.DatabaseDriver)
 	_, err := databaseConection.Exec(migrattoTableCreationQuery)
 	if err != nil {
 		return fmt.Errorf("error creating migratto_migration_history table: %v", err)
 	}
 	return nil
+}
+
+func getMigrattoTableCreationQuery(driver string) string {
+	switch driver {
+	case "postgres", "postgresql":
+		return `
+		CREATE TABLE IF NOT EXISTS migratto_migration_history (
+			id SERIAL PRIMARY KEY,
+			filename VARCHAR(255) NOT NULL,
+			checksum VARCHAR NOT NULL,
+			tag VARCHAR NOT NULL,
+			applied_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+		`
+	case "mysql", "mariadb":
+		return `
+		CREATE TABLE IF NOT EXISTS migratto_migration_history (
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
+			filename VARCHAR(255) NOT NULL,
+			checksum VARCHAR(255) NOT NULL,
+			tag VARCHAR(100) NOT NULL,
+			applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		`
+	default:
+		return ""
+	}
 }
 
 func getAppliedMigrations(databaseConection *sql.DB) (migration_collection_model.MigrationModelCollection, error) {
@@ -150,10 +169,11 @@ func createMigrationHistory(file os.DirEntry, databaseConection *sql.DB, config 
 
 	tag := file_service.GetFileTag(file.Name())
 
-	_, err = databaseConection.Exec(
-		"INSERT INTO migratto_migration_history (filename, checksum, tag) VALUES ($1, $2, $3)",
+	query := fmt.Sprintf(
+		"INSERT INTO migratto_migration_history (filename, checksum, tag) VALUES ('%s', '%s', '%s')",
 		file.Name(), checksum, tag,
 	)
+	_, err = databaseConection.Exec(query)
 	if err != nil {
 		return fmt.Errorf("error recording migration history for file %s: %v", file.Name(), err)
 	}
