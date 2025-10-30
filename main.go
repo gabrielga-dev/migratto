@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	DTO "github.org/gabrielga-dev/migratto/dto"
-	migration_service "github.org/gabrielga-dev/migratto/service/migration"
+	DTO "github.com/gabrielga-dev/migratto/dto"
+	migration_service "github.com/gabrielga-dev/migratto/service/migration"
 )
 
 func main() {

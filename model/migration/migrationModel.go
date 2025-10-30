@@ -3,7 +3,7 @@ package migration_model
 import (
 	"os"
 
-	file_service "github.org/gabrielga-dev/migratto/service/file"
+	file_service "github.com/gabrielga-dev/migratto/service/file"
 )
 
 type MigrationModel struct {

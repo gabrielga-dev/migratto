@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	DTO "github.com/gabrielga-dev/migratto/dto"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	DTO "github.org/gabrielga-dev/migratto/dto"
 )
 
 func Connect(config DTO.ConfigDTO) (*sql.DB, error) {

@@ -3,7 +3,7 @@ package migration_collection_model
 import (
 	"fmt"
 
-	migration_model "github.org/gabrielga-dev/migratto/model/migration"
+	migration_model "github.com/gabrielga-dev/migratto/model/migration"
 )
 
 type MigrationModelCollection struct {

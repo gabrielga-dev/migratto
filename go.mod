@@ -1,4 +1,4 @@
-module github.org/gabrielga-dev/migratto
+module github.com/gabrielga-dev/migratto
 
 go 1.22.2
 

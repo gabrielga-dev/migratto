@@ -6,11 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.org/gabrielga-dev/migratto/db"
-	DTO "github.org/gabrielga-dev/migratto/dto"
-	migration_model "github.org/gabrielga-dev/migratto/model/migration"
-	migration_collection_model "github.org/gabrielga-dev/migratto/model/migration/collection"
-	file_service "github.org/gabrielga-dev/migratto/service/file"
+	"github.com/gabrielga-dev/migratto/db"
+	DTO "github.com/gabrielga-dev/migratto/dto"
+	migration_model "github.com/gabrielga-dev/migratto/model/migration"
+	migration_collection_model "github.com/gabrielga-dev/migratto/model/migration/collection"
+	file_service "github.com/gabrielga-dev/migratto/service/file"
 )
 
 func Migrate(config DTO.ConfigDTO) error {
