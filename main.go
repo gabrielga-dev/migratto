@@ -9,7 +9,7 @@ import (
 
 func main() {
 	fmt.Println("Welcome to Migratto!")
-	migration_service.Migrate(DTO.ConfigDTO{
+	config := DTO.ConfigDTO{
 		DatabaseDriver:   "postgres",
 		DatabaseHost:     "localhost",
 		DatabasePort:     5432,
@@ -19,5 +19,6 @@ func main() {
 		Sslmode:          "disable",
 		MigrationsDir:    "./migrations",
 		Log:              true,
-	})
+	}
+	migration_service.Migrate(config)
 }

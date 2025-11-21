@@ -31,7 +31,9 @@ Configuration is defined through the `ConfigDTO` struct:
 
 ```go
 type ConfigDTO struct {
+	DatabaseDriver   string
 	DatabaseHost     string
+	DatabasePort     int
 	DatabaseName     string
 	DatabaseUsername string
 	DatabasePassword string
@@ -103,6 +105,10 @@ It stores the number of the last executed migration, preventing duplicates and m
 
 ### 🧠 Execution Example
 
+Import Migratto running:
+
+> go get https://github.com/gabrielga-dev/migratto
+
 Suppose your main.go file looks like this:
 
 ```
@@ -111,18 +117,18 @@ package main
 import "fmt"
 
 func main() {
-	config := ConfigDTO{
+		config := DTO.ConfigDTO{
+		DatabaseDriver:   "postgres",
 		DatabaseHost:     "localhost",
-		DatabaseName:     "mydatabase",
-		DatabaseUsername: "postgres",
-		DatabasePassword: "postgres",
+		DatabasePort:     5432,
+		DatabaseName:     "migratto",
+		DatabaseUsername: "user",
+		DatabasePassword: "pass",
 		Sslmode:          "disable",
 		MigrationsDir:    "./migrations",
 		Log:              true,
 	}
-
-	fmt.Println("Starting migrations with Migratto...")
-	RunMigrations(config)
+	migration_service.Migrate(config)
 }
 ```
 Then, simply run in your terminal:
@@ -133,9 +139,9 @@ Then, simply run in your terminal:
 
 ### 🧩 Next Steps
 
- - [ ] Validate migration content (not just the count).
+ - [x] Validate migration content (not just the count).
 
- - [ ] Add support for other database types.
+ - [x] Add support for other database types.
 
 
 # 🇧🇷 Ptbr
@@ -166,7 +172,9 @@ A configuração é feita por meio da struct `ConfigDTO`:
 
 ```go
 type ConfigDTO struct {
+	DatabaseDriver   string
 	DatabaseHost     string
+	DatabasePort     int
 	DatabaseName     string
 	DatabaseUsername string
 	DatabasePassword string
@@ -241,6 +249,10 @@ Ela armazena o número da última migração executada, evitando repetições e 
 
 ### 🧠 Exemplo de execução
 
+Import Migratto running:
+
+> go get https://github.com/gabrielga-dev/migratto
+
 Suponha que você tenha o arquivo main.go assim:
 
 ```go
@@ -249,18 +261,18 @@ package main
 import "fmt"
 
 func main() {
-	config := ConfigDTO{
+		config := DTO.ConfigDTO{
+		DatabaseDriver:   "postgres",
 		DatabaseHost:     "localhost",
-		DatabaseName:     "meubanco",
-		DatabaseUsername: "postgres",
-		DatabasePassword: "postgres",
+		DatabasePort:     5432,
+		DatabaseName:     "migratto",
+		DatabaseUsername: "user",
+		DatabasePassword: "pass",
 		Sslmode:          "disable",
 		MigrationsDir:    "./migrations",
 		Log:              true,
 	}
-
-	fmt.Println("Iniciando migrações com Migratto...")
-	RunMigrations(config)
+	migration_service.Migrate(config)
 }
 
 ```
@@ -273,5 +285,5 @@ E no terminal, basta executar:
 
 ### 🧩 Próximos passos
 
-- [ ] Validar conteúdo das migrações (não apenas a contagem);
-- [ ] Suporte a outros tipos de bancos de dados.
+- [x] Validar conteúdo das migrações (não apenas a contagem);
+- [x] Suporte a outros tipos de bancos de dados.
