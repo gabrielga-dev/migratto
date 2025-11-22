@@ -114,10 +114,15 @@ Suppose your main.go file looks like this:
 ```
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	dto "github.com/gabrielga-dev/migratto/dto"
+	migration_service "github.com/gabrielga-dev/migratto/service/migration"
+)
 
 func main() {
-		config := DTO.ConfigDTO{
+		config := dto.ConfigDTO{
 		DatabaseDriver:   "postgres",
 		DatabaseHost:     "localhost",
 		DatabasePort:     5432,
@@ -258,10 +263,15 @@ Suponha que você tenha o arquivo main.go assim:
 ```go
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	dto "github.com/gabrielga-dev/migratto/dto"
+	migration_service "github.com/gabrielga-dev/migratto/service/migration"
+)
 
 func main() {
-		config := DTO.ConfigDTO{
+		config := dto.ConfigDTO{
 		DatabaseDriver:   "postgres",
 		DatabaseHost:     "localhost",
 		DatabasePort:     5432,
